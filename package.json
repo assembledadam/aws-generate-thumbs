@@ -1,0 +1,14 @@
+{
+  "name": "GenerateThumbs",
+  "version": "1",
+  "description": "Lambda application to generate thumbnails based on given image.",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "http://stash.pro-gmedia.com/projects/VG3/repos/generate-thumbs/browse"
+  },
+  "author": "exnor",
+  "dependencies": {
+    "node-lambda": "0.1.5"
+  }
+}

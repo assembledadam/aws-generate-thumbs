@@ -7,7 +7,7 @@ Right now the source and destination buckets are constants/hardcoded. Use [node-
 ** Important: Keys exist in .env file - remove if ever making this public. **
 
 Lambda input JSON:
-``
+```
 {
     "srcFile": "filename.jpg",  // filename in creo-temp S3 bucket
     "thumbSizes": [             // contains thumb sizes to generate
@@ -16,4 +16,4 @@ Lambda input JSON:
         "950x495"               // provide specific size (so not automatically maintaining ratio)
     ]
 }
-``
+```

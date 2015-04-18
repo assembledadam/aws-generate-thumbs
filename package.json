@@ -1,13 +1,18 @@
 {
-  "name": "GenerateThumbs",
-  "version": "1",
-  "description": "Lambda application to generate thumbnails based on given image.",
+  "name": "node-lambda-template",
+  "version": "0.0.1",
+  "description": "The bare minimum for a node.js app running on Amazon Lambda. Uses node-lambda under the hood to locally run and also deploy your node.js Amazon Lambda application.",
   "main": "index.js",
   "repository": {
     "type": "git",
-    "url": "http://stash.pro-gmedia.com/projects/VG3/repos/generate-thumbs/browse"
+    "url": "git://github.com/rebelmail/node-lambda-template.git"
   },
-  "author": "exnor",
+  "author": "motdotla",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rebelmail/node-lambda-template/issues"
+  },
+  "homepage": "https://github.com/rebelmail/node-lambda-template",
   "dependencies": {
     "node-lambda": "0.1.5"
   }

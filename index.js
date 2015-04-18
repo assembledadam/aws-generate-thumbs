@@ -19,11 +19,11 @@ exports.handler = function(event, context)
     // check required fields exist
     if (!event.srcFile) {
         console.log('Request data not sufficient: need keys srcFile, thumbsizes');
+        return;
     }
 
-    // Object key may have spaces or unicode non-ASCII characters.
-    var srcKey    = decodeURIComponent(event.Records[0].s3.object.key.replace(/\+/g, " "));
-    var dstKey    = "resized-" + srcKey;
+    // Filename may have spaces or unicode non-ASCII characters.
+    var srcFile = decodeURIComponent(event.srcFile.replace(/\+/g, " "));
 
     // Sanity check: validate that source and destination are different buckets.
     if (BUCKET_SRC == BUCKET_DEST) {
@@ -31,80 +31,93 @@ exports.handler = function(event, context)
 	   return;
     }
 
-    // Infer the image type.
-    var typeMatch = srcKey.match(/\.([^.]*)$/);
+    // detect image type
+    var typeMatch = srcFile.match(/\.([^.]*)$/);
 
     if (!typeMatch) {
-	   console.error('unable to infer image type for key ' + srcKey);
+	   console.error('unable to determine image type for file ' + srcFile);
 	   return;
     }
 
     var imageType = typeMatch[1];
 
-    if (imageType != "jpg" && imageType != "png") {
-	   console.log('skipping non-image ' + srcKey);
+    if (imageType != 'jpg' && imageType != 'png') {
+	   console.log('Only jpg and png files supported (file was ' + imageType + ')');
 	   return;
     }
 
-    // Download the image from S3, transform, and upload to a different S3 bucket.
-    async.waterfall(
-        [
-    	function download(next)
-        {
-    	    // Download the image from S3 into a buffer.
+    // deterime filename without extension (for thumbnail filenames)
+    var srcFileNoExt = srcFile.replace('.' + imageType, '');
+
+    // download the image from S3, generate thumbnails, then upload them to a different S3 bucket.
+    async.waterfall([
+    	function download(next) {
+    	    // download the image from S3 into a buffer.
     	    s3.getObject(
-                {Bucket: srcBucket, Key: srcKey},
+                { Bucket: BUCKET_SRC, Key: srcFile },
                 next
             );
     	},
-    	function tranform(response, next)
-        {
-    	    gm(response.Body).size(function(err, size)
-            {
-        		// Infer the scaling factor to avoid stretching the image unnaturally.
-        		var scalingFactor = Math.min(
-        		    MAX_WIDTH / size.width,
-        		    MAX_HEIGHT / size.height
-        		);
-        		var width  = scalingFactor * size.width;
-        		var height = scalingFactor * size.height;
+    	function tranform(response, next) {
+    	    gm(response.Body).size(function(err, size) {
 
-        		// Transform the image buffer in memory.
-    		    this.resize(width, height).toBuffer(imageType, function(err, buffer) {
-        			if (err) {
-        			    next(err);
-        			} else {
-        			    next(null, response.ContentType, buffer);
-        			}
-    		    });
+                // get ratio
+                var self = this;
+
+                // iterate required sizes and scale
+                event.thumbSizes.forEach(function (item) {
+                    var wxh     = item.split('x'),
+                        width   = wxh[0],
+                        height  = wxh[1];
+
+                    // transform the image buffer in memory.
+                    var response = width && height ? self.resize(width, height, '!') : self.resize(width, height);
+
+                    response.toBuffer(imageType, function(err, buffer) {
+                        if (err) {
+                            next(err);
+                        } else {
+                            next(null, response.ContentType, buffer);
+                        }
+                    });
+                });
     	    });
     	},
-    	function upload(contentType, data, next)
-        {
-    	    // Stream the transformed image to a different S3 bucket.
-    	    s3.putObject(
-                {
-                    Bucket: dstBucket,
-        		    Key: dstKey,
-        		    Body: data,
-        		    ContentType: contentType
-                },
-                next
-            );
-        }
-        ],
-        function (err)
-        {
+    	function upload(contentType, data, next) {
+
+            // detect size of thumb
+            gm(data).size(function (err, size) {
+                if (err) {
+                    next(err);
+                } else {
+                    // set filename
+                    var filename = srcFileNoExt + '_' + size.width + 'x' + size.height + '.' + imageType;
+
+                    // upload thumb
+                    s3.putObject(
+                        {
+                            Bucket: BUCKET_DEST,
+                            Key: filename,
+                            Body: data,
+                            ContentType: contentType
+                        },
+                        next
+                    );
+                }
+            });
+
+        }],
+        function (err) {
     	    if (err) {
         		console.error(
-        		    'Unable to resize ' + srcBucket + '/' + srcKey +
-        		    ' and upload to ' + dstBucket + '/' + dstKey +
+        		    'Unable to resize ' + BUCKET_SRC + '/' + srcFile +
+        		    ' and upload to ' + BUCKET_DEST + '/' +
         		    ' due to an error: ' + err
         		);
     	    } else {
         		console.log(
-        		    'Successfully resized ' + srcBucket + '/' + srcKey +
-        		    ' and uploaded to ' + dstBucket + '/' + dstKey
+        		    'Successfully resized ' + BUCKET_SRC + '/' + srcFile +
+        		    ' and uploaded thumbs to ' + BUCKET_DEST + '/'
         		);
     	    }
 

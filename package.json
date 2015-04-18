@@ -1,19 +1,12 @@
 {
-  "name": "node-lambda-template",
+  "name": "GenerateThumbs",
   "version": "0.0.1",
-  "description": "The bare minimum for a node.js app running on Amazon Lambda. Uses node-lambda under the hood to locally run and also deploy your node.js Amazon Lambda application.",
+  "description": "Generate thumbnails for a given image within S3.",
   "main": "index.js",
-  "repository": {
-    "type": "git",
-    "url": "git://github.com/rebelmail/node-lambda-template.git"
-  },
-  "author": "motdotla",
-  "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/rebelmail/node-lambda-template/issues"
-  },
-  "homepage": "https://github.com/rebelmail/node-lambda-template",
+  "author": "exnor",
   "dependencies": {
-    "node-lambda": "0.1.5"
+    "node-lambda": "0.1.5",
+    "async": "0.9.0",
+    "gm": "1.17.0"
   }
 }

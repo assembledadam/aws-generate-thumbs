@@ -18,7 +18,7 @@ exports.handler = function(event, context)
 
     // check required fields exist
     if (!event.srcFile) {
-        console.log('Request data not sufficient: need keys srcFile, thumbsizes');
+        console.log('Request data not sufficient: need keys srcFile, thumbSizes');
         return;
     }
 

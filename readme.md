@@ -4,8 +4,6 @@
 
 Right now the source and destination buckets are constants/hardcoded. Use [node-lambda](https://github.com/RebelMail/node-lambda) to test and deploy it.
 
-**Important: Keys exist in .env file - remove if ever making this public.**
-
 Lambda input JSON:
 
     {
